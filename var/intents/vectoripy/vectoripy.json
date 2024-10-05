@@ -1,0 +1,17 @@
+{
+  "name": "vectoripy",
+  "description": "Vector controls an instance of Spotify",
+  "utterances": [
+    "start spotify",
+    "stop spotify",
+    "pause spotify",
+    "unpause spotify",
+    "play next",
+    "skip next",
+    "previous track",
+    "play previous"
+  ],
+  "intent": "intent_greeting_hello",
+  "type": "hybrid",
+  "priority": 0
+}

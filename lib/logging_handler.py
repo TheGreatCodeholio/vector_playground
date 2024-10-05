@@ -45,6 +45,7 @@ class ColoredFormatter(logging.Formatter):
             if word.startswith('<<') and word.endswith('>>'):
                 message = message.replace(word, f'{highlight_color}{word[2:-2]}{reset}')
 
+        # Include thread name in the output
         thread_name = record.threadName
 
         return f'{time} [{thread_name}] {level_color}{level_name}:{reset} {level_icon} {message.replace(level_name + ": ", "")}'
@@ -53,18 +54,21 @@ class ColoredFormatter(logging.Formatter):
 class CustomLogger:
     _loggers = {}
 
-    def __new__(cls, log_level, log_path):
-        new_logger = super(CustomLogger, cls).__new__(cls)
-        return new_logger
+    def __new__(cls, log_level, logger_name, log_path):
+        if logger_name not in cls._loggers:
+            new_logger = super(CustomLogger, cls).__new__(cls)
+            cls._loggers[logger_name] = new_logger
+            return new_logger
+        else:
+            return cls._loggers[logger_name]
 
-
-    def __init__(self, log_level, log_path):
+    def __init__(self, log_level, logger_name, log_path):
         if hasattr(self, 'is_initialized'):
             # Logger already initialized, just update the log level
             self.set_log_level(log_level)
             return
 
-        self.logger = logging.getLogger(__name__)
+        self.logger = logging.getLogger(logger_name)
         self.logger.setLevel(
             {1: logging.DEBUG, 2: logging.INFO, 3: logging.WARNING, 4: logging.ERROR, 5: logging.CRITICAL}.get(
                 log_level, logging.INFO))

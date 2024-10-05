@@ -1,6 +1,7 @@
 import logging
 import threading
 import time
+from anki_vector import behavior
 
 from lib.audio_controller import AudioController
 from lib.camera_feed_handler import CameraStream
@@ -10,7 +11,7 @@ from lib.object_detection_handler import ObjectDetector
 from lib.status_handler import StatusHandler
 from lib.task_manager import TaskManager
 
-module_logger = logging.getLogger(__name__)
+module_logger = logging.getLogger('vector_playground.robot_controller')
 
 class RobotController:
     def __init__(self, robot, config_data, intent_loader, on_control_lost_callback=None):
@@ -21,6 +22,7 @@ class RobotController:
         """
 
         self.robot = robot
+        self.robot.intent_data = {}
         self.on_control_lost_callback = on_control_lost_callback
         self.control_lost_listener_started = False
         self.status_handler = StatusHandler(self.robot)
@@ -37,6 +39,7 @@ class RobotController:
         self.last_task_time = time.time()
         self.running = False
         self.control_thread = threading.Thread(target=self._control_loop)
+        self.behavior_thread = threading.Thread(target=self._behavior_control)
 
     def start(self):
         """
@@ -73,7 +76,6 @@ class RobotController:
         """
         The main control loop of the robot, which manages actions and tasks.
         """
-
         while self.running:
             # Check if it's time for a new random task (e.g., every 5 seconds)
             if time.time() - self.last_task_time > 15:
@@ -102,3 +104,6 @@ class RobotController:
                 self.on_control_lost_callback(self.robot.serial)
 
             break
+
+    def _behavior_control(self):
+        behavior.ReserveBehaviorControl()

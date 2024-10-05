@@ -6,7 +6,7 @@ import cv2
 import numpy as np
 import threading
 
-module_logger = logging.getLogger(__name__)
+module_logger = logging.getLogger('vector_playground.camera_feed_handler')
 
 class CameraStream:
     def __init__(self, robot, object_detector, enable_high_resolution=True, interval_seconds=1):

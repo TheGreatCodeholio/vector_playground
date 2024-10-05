@@ -3,7 +3,7 @@ import logging
 
 from anki_vector.util import distance_mm, speed_mmps, degrees
 
-module_logger = logging.getLogger(__name__)
+module_logger = logging.getLogger('vector_playground.movement_controller')
 
 class MovementController:
     def __init__(self, robot):

@@ -62,8 +62,8 @@
         });
 
 
-        function sendUserIntent(intentName) {
-            const url = `/robots/{{ serial }}/user_intent?intent=${encodeURIComponent(intentName)}`;
+        function sendUserIntent(intentName, userQuery) {
+            const url = `/robots/{{ serial }}/user_intent?intent=${encodeURIComponent(intentName)}&query=${encodeURIComponent(userQuery)}`;
             fetch(url)
                 .then(response => {
                     if (!response.ok) {
@@ -277,7 +277,7 @@
             updateButtonStates();
         });
 
-        setInterval(sendControlRequests, 100);
+        setInterval(sendControlRequests, 200);
 
         // Disable action buttons
         function disableActionButtons() {
@@ -325,9 +325,14 @@
 
 <button id="action_leave_charger" onclick="leaveCharger()">Leave Charger</button>
 <button id="action_enter_charger" onclick="enterCharger()">Go To Charger</button>
-<button id="action_date" onclick="sendUserIntent('date_intent')">Date Intent</button>
-<button id="action_moon" onclick="sendUserIntent('moon_phase')">Moon Phase Intent</button>
-
+<button id="action_date" onclick="sendUserIntent('date_intent', 'what is the date')">Date Intent</button>
+<button id="action_moon" onclick="sendUserIntent('moon_phase', 'current moon phase')">Moon Phase Intent</button>
+<button id="action_spotify_start" onclick="sendUserIntent('vectoripy', 'start spotify')">Start Spotify</button>
+<button id="action_spotify_stop" onclick="sendUserIntent('vectoripy', 'stop spotify')">Stop Spotify</button>
+<button id="action_spotify_pause" onclick="sendUserIntent('vectoripy', 'pause spotify')">Pause Spotify</button>
+<button id="action_spotify_unpause" onclick="sendUserIntent('vectoripy', 'unpause spotify')">Resume Spotify</button>
+<button id="action_spotify_next" onclick="sendUserIntent('vectoripy', 'next track')">Next Track</button>
+<button id="action_spotify_previous" onclick="sendUserIntent('vectoripy', 'previous track')">Previous Track</button>
 <h2>Keyboard Controls</h2>
 <p>Use W/A/S/D keys to move the robot:</p>
 <ul>

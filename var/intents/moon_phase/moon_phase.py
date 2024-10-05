@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
+import logging
 
 import ephem
+
+intent_logger = logging.getLogger('vector_playground.moon_phase')
 
 def calculate_moon_phase():
     moon = ephem.Moon()
@@ -25,7 +28,7 @@ def calculate_moon_phase():
         return "Waning Crescent"
 
 
-def main(robot):
+def main(robot, user_query):
     moon_phase = calculate_moon_phase()
     final_text = f"The current moon phase is {moon_phase}."
     robot.audio_controller.speak_text(final_text)

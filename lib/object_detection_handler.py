@@ -5,7 +5,7 @@ import cv2
 import mediapipe as mp
 from ultralytics import YOLO
 
-module_logger = logging.getLogger(__name__)
+module_logger = logging.getLogger('vector_playground.object_detection')
 
 class ObjectDetector:
     def __init__(self, config_data, min_detection_confidence=0.68):

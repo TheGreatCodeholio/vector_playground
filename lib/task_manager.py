@@ -6,7 +6,7 @@ import threading
 from anki_vector.events import Events
 from anki_vector.util import *
 
-module_logger = logging.getLogger(__name__)
+module_logger = logging.getLogger('vector_playground.task_manager')
 
 class TaskManager:
     def __init__(self, robot):

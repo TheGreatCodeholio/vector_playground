@@ -3,7 +3,7 @@ import logging
 import configparser
 import os
 
-module_logger = logging.getLogger(__name__)
+module_logger = logging.getLogger('vector_playground.config_handler')
 
 default_config = {
     "log_level": 1

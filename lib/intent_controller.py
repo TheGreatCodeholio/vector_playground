@@ -5,7 +5,7 @@ import os
 import subprocess
 import sys
 
-module_logger = logging.getLogger(__name__)
+module_logger = logging.getLogger('vector_playground.intent_controller')
 
 
 class ModuleLoadingError(Exception):
@@ -203,14 +203,14 @@ class IntentController:
         module_logger.info(f"Matched intent: {matched_intent.get("name")}")
         module_logger.debug(f"User Query: {user_query}")
 
-        result = self.run_user_intent(matched_intent)
+        result = self.run_user_intent(matched_intent, user_query)
         return result
 
-    def run_user_intent(self, intent_data):
+    def run_user_intent(self, intent_data, user_query):
         module = intent_data['module']
 
         if hasattr(module, 'main'):
-            return module.main(self.robot)
+            return module.main(self.robot, user_query)
         else:
             raise AttributeError(f"The intent '{intent_data.get('intent_name')}' does not have a 'main' function.")
 

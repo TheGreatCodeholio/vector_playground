@@ -41,7 +41,7 @@ if not os.path.exists(config_path):
 if not os.path.exists(var_path):
     os.makedirs(var_path)
 
-logging_instance = CustomLogger(log_level, os.path.join(log_path, log_file_name))
+logging_instance = CustomLogger(log_level, app_name, os.path.join(log_path, log_file_name))
 
 try:
     config_data = load_config_file(os.path.join(config_path, config_file))
@@ -116,7 +116,7 @@ controllers_lock = threading.Lock()
 
 def heartbeat_monitor():
     global shutdown
-    while not shutdown:
+    while True:
         logger.debug(f'Running Heartbeat Loop')
         current_time = time.time()
         for serial, info in controllers.items():
@@ -125,20 +125,22 @@ def heartbeat_monitor():
                     logger.debug(f"Releasing robot {serial} due to inactivity")
                     info['status'] = 'available'
                     info['user_id'] = None
+        if shutdown:
+            break
         time.sleep(5)
 
 def robot_reconnector():
     global shutdown
     logger.info("Starting Robot Reconnector")
-    while not shutdown:
+    while True:
         with controllers_lock:
             for serial, info in controllers.items():
                 if info['status'] == 'disconnected':
-                    if info.get("connect_tries") >= 5 and (time.time() - info.get("last_connect_try", time.time()) > 600):
+                    if info.get("connect_tries") >= 5 and (time.time() - info.get("last_connect_try", time.time()) > 120):
                         controllers[serial]['connect_tries'] = 0
                         controllers[serial]['last_connect_try'] = 0
                         try_connection = True
-                    elif info.get("connect_tries") <= 5 and (time.time() - info.get("last_connect_try", time.time()) > 60):
+                    elif info.get("connect_tries") <= 5 and (time.time() - info.get("last_connect_try", time.time()) > 30):
                         try_connection = True
                     else:
                         try_connection = False
@@ -147,6 +149,8 @@ def robot_reconnector():
                         module_logger.info(f"Trying to reconnect to {info.get('name')} {info.get('serial')}")
                         threading.Thread(target=connect_robot, args=(info.get('bot_config', {}),)).start()
 
+        if shutdown:
+            break
         time.sleep(5)
 
 def handle_control_lost(serial):
@@ -364,6 +368,8 @@ def api_user_intent(serial):
     intent_to_run = None
     robot_info = controllers.get(serial)
     intent = request.args.get('intent')
+    user_query = request.args.get('query')
+
     if not robot_info:
         return jsonify({'error': 'Robot not found'}), 404
 
@@ -373,18 +379,17 @@ def api_user_intent(serial):
     controller = robot_info['controller']
 
     # Check if query parameters exist
-    if intent is None:
+    if intent is None or user_query is None:
         return jsonify({'success': False, 'message': 'Missing required parameters.'}), 400
 
     try:
-
         for user_intent in intent_loader.user_intents:
             if user_intent.get('name') == intent:
                 intent_to_run = user_intent
                 break
 
         if intent_to_run:
-            controller.intent_controller.run_user_intent(intent_to_run)
+            controller.intent_controller.run_user_intent(intent_to_run, user_query)
             return jsonify({'success': True}), 200
     except Exception as e:
         module_logger.exception(e)

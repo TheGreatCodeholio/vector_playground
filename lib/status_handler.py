@@ -2,7 +2,7 @@ import logging
 import threading
 import time
 
-module_logger = logging.getLogger(__name__)
+module_logger = logging.getLogger('vector_playground.status_handler')
 
 class StatusHandler:
     def __init__(self, robot):
