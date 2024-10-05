@@ -1,0 +1,13 @@
+{
+  "name": "moon_phase",
+  "description": "Vector gives the current moon phase",
+  "utterances": [
+    "moon phase",
+    "is there a full moon",
+    "moon view",
+    "moon tonight"
+  ],
+  "intent": "intent_greeting_hello",
+  "type": "hybrid",
+  "priority": 0
+}

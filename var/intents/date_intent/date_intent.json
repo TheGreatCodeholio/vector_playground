@@ -1,0 +1,14 @@
+{
+  "name": "date_intent",
+  "description": "Vector gives the current day, month, year",
+  "utterances": [
+    "*"
+  ],
+  "intent": "intent_greeting_hello",
+  "params": {
+    "paramname": "",
+    "paramvalue": ""
+  },
+  "type": "hybrid",
+  "priority": 0
+}
