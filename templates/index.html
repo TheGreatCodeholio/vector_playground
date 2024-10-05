@@ -1,0 +1,23 @@
+<!-- templates/index.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Available Robots</title>
+</head>
+<body>
+    <h1>Available Robots</h1>
+    <ul>
+        {% for robot in robots %}
+        <li>
+            Robot Serial: {{ robot.serial }} - Status: {{ robot.status }}
+            {% if robot.status == 'available' %}
+            <a href="{{ url_for('control_robot', serial=robot.serial) }}">Control Robot</a>
+            {% else %}
+            <span>(Currently in use)</span>
+            {% endif %}
+        </li>
+        {% endfor %}
+    </ul>
+</body>
+</html>

@@ -1,0 +1,13 @@
+{
+    "log_level": 1,
+    "wirepod_path": "",
+    "sdk_config_path": "~/.anki_vector",
+    "object_detection_model_path": "var/yolo/yolov8x.pt",
+    "general": {
+        "base_url": "http://localhost",
+        "cookie_domain": "localhost",
+        "cookie_secure": false,
+        "cookie_name": "vector_playground",
+        "cookie_path": "/"
+    }
+}

@@ -1,0 +1,342 @@
+<!-- templates/control.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Control Robot {{ serial }}</title>
+    <script>
+        let keysPressed = {};
+        let movementState = '';
+        let liftState = '';
+        let headState = '';
+        const actionButtons = ['action_leave_charger', 'action_enter_charger', 'action_date', 'action_moon'];
+
+        const robotSerial = '{{ serial }}';
+
+        function sendCommand(command, params = {}) {
+            fetch(`/robots/${robotSerial}/command`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({command, params})
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        alert('Error: ' + data.error);
+                    } else {
+                        console.log(data.message);
+                    }
+                });
+        }
+
+        function leaveCharger() {
+            sendCommand('leave_charger');
+        }
+
+        function enterCharger() {
+            sendCommand('enter_charger');
+        }
+
+        // Heartbeat function to keep the session alive
+        function sendHeartbeat() {
+            fetch(`/heartbeat/${robotSerial}`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'}
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        alert('Error: ' + data.error);
+                        // Redirect to index page if not controlling the robot
+                        window.location.href = '/';
+                    }
+                });
+        }
+
+        // Send heartbeat every 5 seconds
+        setInterval(sendHeartbeat, 5000);
+
+        // Release robot when page is unloaded
+        window.addEventListener('beforeunload', function (event) {
+            navigator.sendBeacon(`/release/${robotSerial}`);
+        });
+
+
+        function sendUserIntent(intentName) {
+            const url = `/robots/{{ serial }}/user_intent?intent=${encodeURIComponent(intentName)}`;
+            fetch(url)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log(data);
+                })
+                .catch(error => {
+                    console.error('Error fetching status:', error);
+                });
+        }
+
+        function refreshStatus() {
+
+            fetch(`/robots/{{ serial }}/status`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    // Update the HTML with the status values
+                    document.getElementById('charger').textContent = data.is_on_charger ? 'Yes' : 'No';
+                    document.getElementById('charging').textContent = data.is_charging ? 'Yes' : 'No';
+                    document.getElementById('moving').textContent = data.is_robot_moving ? 'Yes' : 'No';
+                    document.getElementById('cliff_detected').textContent = data.is_cliff_detected ? 'Yes' : 'No';
+                })
+                .catch(error => {
+                    console.error('Error fetching status:', error);
+                });
+        }
+
+        function refreshCameraFeed() {
+            const img = document.getElementById('camera_feed');
+            img.src = '/robots/{{ serial }}/camera_feed?' + new Date().getTime();
+        }
+
+        setInterval(refreshCameraFeed, 250);
+        setInterval(refreshStatus, 2000);
+
+        function sendMovement(url) {
+            fetch(url)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log(data);
+                })
+                .catch(error => {
+                    console.error('Error fetching status:', error);
+                });
+        }
+
+        function sendControlRequests() {
+            // Handle movement state
+            let newMovementState = getMovementState(keysPressed);
+            if (newMovementState !== movementState) {
+                sendMovementCommand(newMovementState);
+                movementState = newMovementState;
+            }
+
+            // Handle lift state
+            let newLiftState = getLiftState(keysPressed);
+            if (newLiftState !== liftState) {
+                sendLiftCommand(newLiftState);
+                liftState = newLiftState;
+            }
+
+            // Handle head state
+            let newHeadState = getHeadState(keysPressed);
+            if (newHeadState !== headState) {
+                sendHeadCommand(newHeadState);
+                headState = newHeadState;
+            }
+
+            updateButtonStates();
+        }
+
+        function getMovementState(keysPressed) {
+            const w = keysPressed['w'];
+            const a = keysPressed['a'];
+            const s = keysPressed['s'];
+            const d = keysPressed['d'];
+
+            if (!w && !a && !s && !d) {
+                return 'stopped';
+            }
+            if (w && !s) {
+                if (a && !d) return 'forward-left';
+                if (!a && d) return 'forward-right';
+                if (!a && !d) return 'forward';
+            }
+            if (s && !w) {
+                if (a && !d) return 'backward-left';
+                if (!a && d) return 'backward-right';
+                if (!a && !d) return 'backward';
+            }
+            if (!w && !s) {
+                if (a && !d) return 'left';
+                if (!a && d) return 'right';
+            }
+            return 'stopped';
+        }
+
+        function sendMovementCommand(state) {
+            switch (state) {
+                case 'stopped':
+                    sendMovement("/robots/{{ serial }}/move_wheels?left=0&right=0");
+                    break;
+                case 'forward':
+                    sendMovement("/robots/{{ serial }}/move_wheels?left=140&right=140");
+                    break;
+                case 'forward-left':
+                    sendMovement("/robots/{{ serial }}/move_wheels?left=100&right=190");
+                    break;
+                case 'forward-right':
+                    sendMovement("/robots/{{ serial }}/move_wheels?left=190&right=100");
+                    break;
+                case 'left':
+                    sendMovement("/robots/{{ serial }}/move_wheels?left=-150&right=150");
+                    break;
+                case 'right':
+                    sendMovement("/robots/{{ serial }}/move_wheels?left=150&right=-150");
+                    break;
+                case 'backward':
+                    sendMovement("/robots/{{ serial }}/move_wheels?left=-150&right=-150");
+                    break;
+                case 'backward-left':
+                    sendMovement("/robots/{{ serial }}/move_wheels?left=-100&right=190");
+                    break;
+                case 'backward-right':
+                    sendMovement("/robots/{{ serial }}/move_wheels?left=-190&right=100");
+                    break;
+            }
+        }
+
+        function getLiftState(keysPressed) {
+            const r = keysPressed['r'];
+            const f = keysPressed['f'];
+
+            if (!r && !f) {
+                return 'lift-stopped';
+            }
+            if (r && !f) {
+                return 'lift-up';
+            }
+            if (!r && f) {
+                return 'lift-down';
+            }
+            return 'lift-stopped';
+        }
+
+        function sendLiftCommand(state) {
+            switch (state) {
+                case 'lift-stopped':
+                    sendMovement("/robots/{{ serial }}/move_lift?speed=0")
+                    break;
+                case 'lift-up':
+                    sendMovement("/robots/{{ serial }}/move_lift?speed=2")
+                    break;
+                case 'lift-down':
+                    sendMovement("/robots/{{ serial }}/move_lift?speed=-2")
+                    break;
+            }
+        }
+
+        function getHeadState(keysPressed) {
+            const t = keysPressed['t'];
+            const g = keysPressed['g'];
+
+            if (!t && !g) {
+                return 'head-stopped';
+            }
+            if (t && !g) {
+                return 'head-up';
+            }
+            if (!t && g) {
+                return 'head-down';
+            }
+            return 'head-stopped';
+        }
+
+        function sendHeadCommand(state) {
+            switch (state) {
+                case 'head-stopped':
+                    sendMovement("/robots/{{ serial }}/move_head?speed=0")
+                    break;
+                case 'head-up':
+                    sendMovement("/robots/{{ serial }}/move_head?speed=2")
+                    break;
+                case 'head-down':
+                    sendMovement("/robots/{{ serial }}/move_head?speed=-2")
+                    break;
+            }
+        }
+
+        document.addEventListener('keydown', (event) => {
+            keysPressed[event.key.toLowerCase()] = true;
+            updateButtonStates();
+        });
+
+        document.addEventListener('keyup', (event) => {
+            keysPressed[event.key.toLowerCase()] = false;
+            updateButtonStates();
+        });
+
+        setInterval(sendControlRequests, 100);
+
+        // Disable action buttons
+        function disableActionButtons() {
+            actionButtons.forEach(buttonId => {
+                document.getElementById(buttonId).disabled = true;
+            });
+        }
+
+        // Enable action buttons
+        function enableActionButtons() {
+            actionButtons.forEach(buttonId => {
+                document.getElementById(buttonId).disabled = false;
+            });
+        }
+
+        // Check if any of the control keys (w, a, s, d, f, r, g, t) are pressed
+        function areControlKeysPressed() {
+            const controlKeys = ['w', 'a', 's', 'd', 'f', 'r', 'g', 't'];
+            return controlKeys.some(key => keysPressed[key]);
+        }
+
+        // Call this function to update button states based on keys pressed
+        function updateButtonStates() {
+            if (areControlKeysPressed()) {
+                disableActionButtons();
+            } else {
+                enableActionButtons();
+            }
+        }
+
+    </script>
+</head>
+<body>
+<h1>Control Robot {{ serial }}</h1>
+<h2>Camera Feed</h2>
+<img id="camera_feed" src="/robots/{{ serial }}/camera_feed" width="1280" height="720">
+
+<h4>Status:</h4>
+<div>
+    <p>Charger: <span id="charger"></span></p>
+    <p>Charging: <span id="charging"></span></p>
+    <p>Moving: <span id="moving"></span></p>
+    <p>Cliff Detected: <span id="cliff_detected"></span></p>
+</div>
+
+<button id="action_leave_charger" onclick="leaveCharger()">Leave Charger</button>
+<button id="action_enter_charger" onclick="enterCharger()">Go To Charger</button>
+<button id="action_date" onclick="sendUserIntent('date_intent')">Date Intent</button>
+<button id="action_moon" onclick="sendUserIntent('moon_phase')">Moon Phase Intent</button>
+
+<h2>Keyboard Controls</h2>
+<p>Use W/A/S/D keys to move the robot:</p>
+<ul>
+    <li>W: Move Forward</li>
+    <li>S: Move Backward</li>
+    <li>A: Turn Left</li>
+    <li>D: Turn Right</li>
+</ul>
+
+<a href="/">Back to Robot List</a>
+</body>
+</html>

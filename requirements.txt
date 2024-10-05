@@ -1,0 +1,8 @@
+git+https://github.com/TheGreatCodeholio/wirepod-vector-python-sdk.git
+opencv-python~=4.10.0.84
+numpy>=1.23.5
+ultralytics~=8.3.3
+mediapipe~=0.10.15
+Flask~=3.0.3
+Flask-Session~=0.8.0
+colorama~=0.4.6
