@@ -514,7 +514,7 @@ def main():
 
     try:
         # Run the Flask app
-        app.run(host='0.0.0.0', port=8012, threaded=True)
+        app.run(host='0.0.0.0', port=8012, threaded=True, debug=False)
     except KeyboardInterrupt:
         shutdown = True
         pass

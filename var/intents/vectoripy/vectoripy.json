@@ -8,7 +8,10 @@
     "unpause spotify",
     "play next",
     "skip next",
+    "next track",
     "previous track",
+    "track back",
+    "track forward",
     "play previous"
   ],
   "intent": "intent_greeting_hello",

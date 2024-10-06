@@ -83,7 +83,7 @@ def spotify_intent_loop(robot, spotify_client, ui_generator):
 
         # Wait for the next update interval
         if not robot.intent_data["vectoripy"]["running"]:
-            robot.anim.play_animation_trigger('InitialWakeUp', 1)
+            robot.anim.play_animation_trigger('WakeupGetout', 1)
             break
 
         time.sleep(SCREEN_UPDATE_INTERVAL)
@@ -110,17 +110,18 @@ def skip_spotify(robot, spotify_client, action):
 def get_spotify_action(utterance):
     utterance = utterance.lower()  # Convert to lowercase for case-insensitive matching
 
-    if utterance == "start spotify":
+    # Keywords or actions we're looking for
+    if "start" in utterance and "spotify" in utterance:
         return "start"
-    elif utterance == "stop spotify":
+    elif "stop" in utterance and "spotify" in utterance:
         return "stop"
-    elif utterance == "pause spotify":
+    elif "pause" in utterance and "spotify" in utterance:
         return "pause"
-    elif utterance == "unpause spotify":
+    elif "unpause" in utterance or "resume" in utterance:  # Cover both "unpause" and "resume"
         return "unpause"
-    elif utterance == "play next" or utterance == "skip next":
+    elif "next" in utterance or "skip" in utterance:
         return "next"
-    elif utterance == "previous track" or utterance == "play previous":
+    elif "previous" in utterance or "back" in utterance:
         return "previous"
     else:
         return "unknown action"
